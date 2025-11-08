@@ -21,7 +21,11 @@ headers = {
 
 while True:
     try:
-        response = requests.get(url_long_pooling, headers=headers, timeout=POOLING_TIMEOUT)
+        response = requests.get(
+            url_long_pooling,
+            headers=headers,
+            timeout=POOLING_TIMEOUT
+        )
         response.raise_for_status()
         print(response.json())
     except requests.exceptions.HTTPError as err:
