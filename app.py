@@ -28,6 +28,8 @@ while True:
         status = err.response.status_code if err.response is not None else "unknown"
         body = err.response.text if err.response is not None else "no body"
         raise RuntimeError(f"HTTP error {status}: {body}") from err
+    except requests.exceptions.ReadTimeout as err:
+        continue
     except requests.exceptions.RequestException as err:
         logging.error(f"Network error: {err}")
         time.sleep(5)
