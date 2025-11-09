@@ -19,15 +19,24 @@ headers = {
     "Authorization": f"Token {token}",
 }
 
+timestamp = None
+
 while True:
     try:
         response = requests.get(
             url_long_pooling,
             headers=headers,
-            timeout=POOLING_TIMEOUT
+            timeout=POOLING_TIMEOUT,
+            params={'timestamp': timestamp}
         )
         response.raise_for_status()
-        print(response.json())
+        response_data = response.json()
+
+        if response_data.get('status') == 'timeout':
+            timestamp = response_data.get('timestamp_to_request')
+        else:
+            timestamp = response_data.get('last_attempt_timestamp')
+        print(response_data)
     except requests.exceptions.HTTPError as err:
         status = err.response.status_code if err.response is not None else "unknown"
         body = err.response.text if err.response is not None else "no body"
