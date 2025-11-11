@@ -9,6 +9,8 @@ from telegram.ext import (
     filters,
     ContextTypes,
 )
+from dvmn_api import fetch_reviews
+from config import TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, CHECK_INTERVAL
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -16,29 +18,40 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-load_dotenv()
-TOKEN = os.environ.get('TELEGRAM_TOKEN')
+
+async def check_reviews(context: ContextTypes.DEFAULT_TYPE) -> None:
+    timestamp = context.job.data.get('timestamp', None)
+    response_data = fetch_reviews(timestamp)
+
+    if response_data:
+        if response_data.get('status') == 'timeout':
+            context.job.data['timestamp'] = response_data.get('timestamp_to_request')
+        else:
+            context.job.data['timestamp'] = response_data.get('last_attempt_timestamp')
+            new_attempts = response_data.get('new_attempts', [])
+            message = (
+                f'Преподаватель проверил работу!'
+            )
+
+            await context.bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(f'Привет, {update.effective_user.first_name}!')
 
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(update.message.text)
-
-
 def main() -> None:
     application = (
         Application.builder()
-        .token(TOKEN)
+        .token(TELEGRAM_TOKEN)
         .concurrent_updates(True)
-        .job_queue(None)
         .build()
     )
 
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+
+    job_queue = application.job_queue
+    job_queue.run_repeating(check_reviews, interval=CHECK_INTERVAL, first=1, data={})
 
     application.run_polling()
 
