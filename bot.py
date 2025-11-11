@@ -1,12 +1,9 @@
 import logging
-import os
-from dotenv import load_dotenv
+import argparse
 from telegram import Update
 from telegram.ext import (
     Application,
     CommandHandler,
-    MessageHandler,
-    filters,
     ContextTypes,
 )
 from dvmn_api import fetch_reviews
@@ -17,6 +14,8 @@ logging.basicConfig(
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+TG_CHAT_ID = TELEGRAM_CHAT_ID
 
 
 async def check_reviews(context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -42,7 +41,7 @@ async def check_reviews(context: ContextTypes.DEFAULT_TYPE) -> None:
                     f'Ссылка на урок: {lesson_url}'
                 )
 
-                await context.bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+                await context.bot.send_message(chat_id=TG_CHAT_ID, text=message)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -50,6 +49,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 def main() -> None:
+    global TG_CHAT_ID
+
+    parser = argparse.ArgumentParser(
+        description='Telegram bot for checking DVMN reviews'
+    )
+    parser.add_argument(
+        '--chat_id',
+        help='Telegram chat ID',
+        default=TELEGRAM_CHAT_ID,
+    )
+    args = parser.parse_args()
+    TG_CHAT_ID = args.chat_id
+
     application = (
         Application.builder()
         .token(TELEGRAM_TOKEN)
