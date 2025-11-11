@@ -32,6 +32,7 @@ def main() -> None:
     application = (
         Application.builder()
         .token(TOKEN)
+        .concurrent_updates(True)
         .job_queue(None)
         .build()
     )
