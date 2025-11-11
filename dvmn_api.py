@@ -1,6 +1,6 @@
 import logging
 import requests
-from config import  DVMN_TOKEN, POOLING_TIMEOUT, DVMN_URL_LONG_POLLING
+from config import  DVMN_TOKEN, LONG_POLLING_TIMEOUT_SECONDS, DVMN_URL_LONG_POLLING
 
 
 def fetch_reviews(timestamp):
@@ -13,7 +13,7 @@ def fetch_reviews(timestamp):
         response = requests.get(
             DVMN_URL_LONG_POLLING,
             headers=headers,
-            timeout=POOLING_TIMEOUT,
+            timeout=LONG_POLLING_TIMEOUT_SECONDS,
             params=params
         )
         response.raise_for_status()
