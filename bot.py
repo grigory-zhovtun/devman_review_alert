@@ -29,11 +29,20 @@ async def check_reviews(context: ContextTypes.DEFAULT_TYPE) -> None:
         else:
             context.job.data['timestamp'] = response_data.get('last_attempt_timestamp')
             new_attempts = response_data.get('new_attempts', [])
-            message = (
-                f'Преподаватель проверил работу!'
-            )
 
-            await context.bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+            for attempt in new_attempts:
+                lesson_title = attempt['lesson_title']
+                is_negative = attempt['is_negative']
+                lesson_url = attempt['lesson_url']
+
+                status_message = "К сожалению, в работе нашлись ошибки." if is_negative else "Преподавателю все понравилось, можно приступать к следующему уроку!"
+                message = (
+                    f'У вас проверили работу "{lesson_title}"\n\n'
+                    f'{status_message}\n\n'
+                    f'Ссылка на урок: {lesson_url}'
+                )
+
+                await context.bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
