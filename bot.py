@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 import argparse
 from telegram import Update
@@ -34,7 +35,12 @@ async def check_reviews(context: ContextTypes.DEFAULT_TYPE) -> None:
                 is_negative = attempt['is_negative']
                 lesson_url = attempt['lesson_url']
 
-                status_message = "К сожалению, в работе нашлись ошибки." if is_negative else "Преподавателю все понравилось, можно приступать к следующему уроку!"
+                status_message = (
+                    "К сожалению, в работе нашлись ошибки."
+                    if is_negative
+                    else "Преподавателю все понравилось, можно приступать к следующему уроку!"
+                )
+
                 message = (
                     f'У вас проверили работу "{lesson_title}"\n\n'
                     f'{status_message}\n\n'
