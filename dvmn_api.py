@@ -1,4 +1,3 @@
-import time
 import logging
 import requests
 from config import  DVMN_TOKEN, POOLING_TIMEOUT, DVMN_URL_LONG_POLLING
