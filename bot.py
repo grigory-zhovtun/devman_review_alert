@@ -16,10 +16,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-TG_CHAT_ID = TELEGRAM_CHAT_ID
-
 
 async def check_reviews(context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat_id = context.job.data.get('chat_id')
     timestamp = context.job.data.get('timestamp', None)
     response_data = fetch_reviews(timestamp)
 
@@ -47,7 +46,7 @@ async def check_reviews(context: ContextTypes.DEFAULT_TYPE) -> None:
                     f'Ссылка на урок: {lesson_url}'
                 )
 
-                await context.bot.send_message(chat_id=TG_CHAT_ID, text=message)
+                await context.bot.send_message(chat_id=chat_id, text=message)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -55,8 +54,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 def main() -> None:
-    global TG_CHAT_ID
-
     parser = argparse.ArgumentParser(
         description='Telegram bot for checking DVMN reviews'
     )
@@ -66,7 +63,6 @@ def main() -> None:
         default=TELEGRAM_CHAT_ID,
     )
     args = parser.parse_args()
-    TG_CHAT_ID = args.chat_id
 
     application = (
         Application.builder()
@@ -78,7 +74,12 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
 
     job_queue = application.job_queue
-    job_queue.run_repeating(check_reviews, interval=CHECK_INTERVAL, first=1, data={})
+    job_queue.run_repeating(
+        check_reviews,
+        interval=CHECK_INTERVAL,
+        first=1,
+        data={'chat_id': args.chat_id}
+    )
 
     application.run_polling()
 
