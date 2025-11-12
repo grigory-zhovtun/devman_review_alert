@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения при импорте модуля
 load_dotenv()
 
 DVMN_URL = 'https://dvmn.org/api/user_reviews/'
@@ -14,7 +13,6 @@ DVMN_TOKEN = os.getenv('DEVMAN_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-# ПОТОМ проверяем, что они не пустые
 missing = []
 if not DVMN_TOKEN:
     missing.append('DEVMAN_TOKEN')
