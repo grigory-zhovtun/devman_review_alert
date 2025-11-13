@@ -12,11 +12,6 @@ from telegram.ext import (
 )
 from dvmn_api import fetch_reviews
 
-
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
 logger = logging.getLogger(__name__)
 
 CHECK_INTERVAL_SECONDS = 300
@@ -90,6 +85,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 def main() -> None:
+    logging.basicConfig(
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        level=logging.INFO
+    )
+
     try:
         config = load_config()
         parser = argparse.ArgumentParser(description='Telegram bot for checking DVMN reviews')
