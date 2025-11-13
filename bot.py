@@ -35,19 +35,19 @@ def check_reviews(context: CallbackContext) -> None:
     dvmn_token = context.job.context['dvmn_token']
 
     try:
-        response_data = fetch_reviews(context.job.context.get('timestamp'), dvmn_token)
+        reviews = fetch_reviews(context.job.context.get('timestamp'), dvmn_token)
     except requests.exceptions.ReadTimeout:
         return
 
-    if not response_data:
+    if not reviews:
         return
 
-    if response_data.get('status') == 'timeout':
-        context.job.context['timestamp'] = response_data.get('timestamp_to_request')
+    if reviews.get('status') == 'timeout':
+        context.job.context['timestamp'] = reviews.get('timestamp_to_request')
         return
 
-    context.job.context['timestamp'] = response_data.get('last_attempt_timestamp')
-    new_attempts = response_data.get('new_attempts', [])
+    context.job.context['timestamp'] = reviews.get('last_attempt_timestamp')
+    new_attempts = reviews.get('new_attempts', [])
 
     for attempt in new_attempts:
         status = "К сожалению, в работе нашлись ошибки." if attempt['is_negative'] else "Преподавателю все понравилось!"
