@@ -39,15 +39,20 @@ def check_reviews(context: CallbackContext) -> None:
     except requests.exceptions.ReadTimeout:
         return
 
-    if response_data:
-        if response_data.get('status') == 'timeout':
-            context.job.context['timestamp'] = response_data.get('timestamp_to_request')
-        else:
-            context.job.context['timestamp'] = response_data.get('last_attempt_timestamp')
-            for attempt in response_data.get('new_attempts', []):
-                status = "К сожалению, в работе нашлись ошибки." if attempt['is_negative'] else "Преподавателю все понравилось!"
-                message = f'У вас проверили работу "{attempt["lesson_title"]}"\n\n{status}\n\nСсылка: {attempt["lesson_url"]}'
-                context.bot.send_message(chat_id=chat_id, text=message)
+    if not response_data:
+        return
+
+    if response_data.get('status') == 'timeout':
+        context.job.context['timestamp'] = response_data.get('timestamp_to_request')
+        return
+
+    context.job.context['timestamp'] = response_data.get('last_attempt_timestamp')
+    new_attempts = response_data.get('new_attempts', [])
+
+    for attempt in new_attempts:
+        status = "К сожалению, в работе нашлись ошибки." if attempt['is_negative'] else "Преподавателю все понравилось!"
+        message = f'У вас проверили работу "{attempt["lesson_title"]}"\n\n{status}\n\nСсылка: {attempt["lesson_url"]}'
+        context.bot.send_message(chat_id=chat_id, text=message)
 
 
 def start(update: Update, context: CallbackContext) -> None:
