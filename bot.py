@@ -19,14 +19,10 @@ def check_reviews(context: CallbackContext) -> None:
     chat_id = context.job.context['chat_id']
     dvmn_token = context.job.context['dvmn_token']
 
-    try:
-        reviews = fetch_reviews(context.job.context.get('timestamp'), dvmn_token)
-    except requests.exceptions.ReadTimeout:
-        return
+    reviews = fetch_reviews(context.job.context.get('timestamp'), dvmn_token)
 
     if not reviews:
         return
-
     if reviews.get('status') == 'timeout':
         context.job.context['timestamp'] = reviews.get('timestamp_to_request')
         return
