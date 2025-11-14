@@ -70,12 +70,6 @@ python bot.py
 
 The bot will start polling for new reviews immediately.
 
-You can also override the `TELEGRAM_CHAT_ID` from the `.env` file by providing a command-line argument:
-
-```bash
-python bot.py --chat_id 123456789
-```
-
 ---
 
 ## Example Notification
