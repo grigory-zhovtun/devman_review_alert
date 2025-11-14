@@ -15,21 +15,6 @@ logger = logging.getLogger(__name__)
 CHECK_INTERVAL_SECONDS = 300
 
 
-def load_config():
-    load_dotenv()
-    config = {
-        'DVMN_TOKEN': os.getenv('DEVMAN_TOKEN'),
-        'TELEGRAM_TOKEN': os.getenv('TELEGRAM_TOKEN'),
-        'TELEGRAM_CHAT_ID': os.getenv('TELEGRAM_CHAT_ID')
-    }
-
-    missing = [key for key, value in config.items() if not value]
-    if missing:
-        raise ValueError(f"Отсутствуют переменные: {', '.join(missing)}\nПроверьте .env")
-
-    return config
-
-
 def check_reviews(context: CallbackContext) -> None:
     chat_id = context.job.context['chat_id']
     dvmn_token = context.job.context['dvmn_token']
@@ -60,16 +45,22 @@ def start(update: Update, context: CallbackContext) -> None:
 
 
 def main() -> None:
+    load_dotenv()
     logging.basicConfig(
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         level=logging.INFO
     )
 
     try:
-        config = load_config()
-        args = argparse.ArgumentParser(description='Telegram bot for checking DVMN reviews')
-        args.add_argument('--chat_id', help='Telegram chat ID', default=config['TELEGRAM_CHAT_ID'])
-        parsed_args = args.parse_args()
+        config = {
+            'DVMN_TOKEN': os.getenv('DEVMAN_TOKEN'),
+            'TELEGRAM_TOKEN': os.getenv('TELEGRAM_TOKEN'),
+            'TELEGRAM_CHAT_ID': os.getenv('TELEGRAM_CHAT_ID')
+        }
+
+        missing = [key for key, value in config.items() if not value]
+        if missing:
+            raise ValueError(f"Отсутствуют переменные: {', '.join(missing)}\nПроверьте .env")
 
         updater = Updater(token=config['TELEGRAM_TOKEN'])
         dispatcher = updater.dispatcher
@@ -80,7 +71,7 @@ def main() -> None:
             check_reviews,
             interval=CHECK_INTERVAL_SECONDS,
             first=1,
-            context={'chat_id': parsed_args.chat_id, 'dvmn_token': config['DVMN_TOKEN']}
+            context={'chat_id': config['TELEGRAM_CHAT_ID'], 'dvmn_token': config['DVMN_TOKEN']}
         )
 
         updater.start_polling()
