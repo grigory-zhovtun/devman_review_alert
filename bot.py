@@ -31,10 +31,12 @@ def check_reviews(context: CallbackContext) -> None:
     new_attempts = reviews.get('new_attempts', [])
 
     for attempt in new_attempts:
-        status = "К сожалению, в работе нашлись ошибки." \
-            if attempt['is_negative'] \
-            else "Преподавателю все понравилось!"
-        message = f'У вас проверили работу "{attempt["lesson_title"]}"\n\n{status}\n\nСсылка: {attempt["lesson_url"]}'
+        is_negative = attempt['is_negative']
+        status = ("К сожалению, в работе нашлись ошибки."
+                  if is_negative
+                  else "Преподавателю все понравилось!")
+        message = (f'У вас проверили работу "{attempt["lesson_title"]}"'
+                   f'\n\n{status}\n\nСсылка: {attempt["lesson_url"]}')
         context.bot.send_message(chat_id=chat_id, text=message)
 
 
@@ -57,20 +59,26 @@ def main() -> None:
                 'TELEGRAM_CHAT_ID': os.getenv('TELEGRAM_CHAT_ID')
             }
 
-            missing = [key for key, value in config.items() if not value]
-            if missing:
-                raise ValueError(f"Отсутствуют переменные: {', '.join(missing)}\nПроверьте .env")
+            missing_keys = [key for key, value in config.items() if not value]
+            if missing_keys:
+                error_msg = (f"Отсутствуют переменные: "
+                             f"{', '.join(missing_keys)}\nПроверьте .env")
+                raise ValueError(error_msg)
 
             updater = Updater(token=config['TELEGRAM_TOKEN'])
             dispatcher = updater.dispatcher
 
             dispatcher.add_handler(CommandHandler("start", start))
 
+            job_context = {
+                'chat_id': config['TELEGRAM_CHAT_ID'],
+                'dvmn_token': config['DVMN_TOKEN']
+            }
             updater.job_queue.run_repeating(
                 check_reviews,
                 interval=CHECK_INTERVAL_SECONDS,
                 first=1,
-                context={'chat_id': config['TELEGRAM_CHAT_ID'], 'dvmn_token': config['DVMN_TOKEN']}
+                context=job_context
             )
 
             updater.start_polling()
