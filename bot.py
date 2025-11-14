@@ -107,29 +107,42 @@ def main() -> None:
             updater.idle()
 
         except requests.exceptions.ConnectionError as e:
-            logger.warning(f"Ошибка подключения: {e}. Перезапуск через 10 секунд...")
+            error_msg = f"Ошибка подключения: {e}. "
+            error_msg += "Перезапуск через 10 секунд..."
+            logger.warning(error_msg)
             time.sleep(10)
             continue
         except requests.exceptions.Timeout as e:
-            logger.warning(f"Таймаут соединения: {e}. Перезапуск через 5 секунд...")
+            error_msg = f"Таймаут соединения: {e}. "
+            error_msg += "Перезапуск через 5 секунд..."
+            logger.warning(error_msg)
             time.sleep(5)
             continue
         except requests.exceptions.ReadTimeout as e:
-            logger.warning(f"Таймаут чтения: {e}. Продолжаем работу...")
+            error_msg = f"Таймаут чтения: {e}. "
+            error_msg += "Продолжаем работу..."
+            logger.warning(error_msg)
             time.sleep(5)
             continue
         except requests.exceptions.HTTPError as e:
-            if hasattr(e, 'response') and e.response.status_code in [500, 502, 503, 504]:
-                logger.warning(
-                    f"Временная ошибка сервера ({e.response.status_code}): {e}. Перезапуск через 30 секунд...")
+            server_errors = [500, 502, 503, 504]
+            if (hasattr(e, 'response') and
+                    e.response.status_code in server_errors):
+                status_code = e.response.status_code
+                error_msg = f"Временная ошибка сервера ({status_code}): "
+                error_msg += f"{e}. Перезапуск через 30 секунд..."
+                logger.warning(error_msg)
                 time.sleep(30)
                 continue
             else:
-                logger.error(f"HTTP ошибка: {e}")
+                error_msg = f"HTTP ошибка: {e}"
+                logger.error(error_msg)
                 raise
 
         except Exception as e:
-            logger.exception(f"Критическая ошибка: {e}. Перезапуск через 30 секунд...")
+            error_msg = f"Критическая ошибка: {e}. "
+            error_msg += "Перезапуск через 30 секунд..."
+            logger.exception(error_msg)
             time.sleep(30)
             continue
 
