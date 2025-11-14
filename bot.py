@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 import time
-
 import requests
 from dotenv import load_dotenv
 import logging
-import argparse
 from telegram import Update
 from telegram.ext import (
     CommandHandler, CallbackContext, Updater,
@@ -33,7 +31,9 @@ def check_reviews(context: CallbackContext) -> None:
     new_attempts = reviews.get('new_attempts', [])
 
     for attempt in new_attempts:
-        status = "К сожалению, в работе нашлись ошибки." if attempt['is_negative'] else "Преподавателю все понравилось!"
+        status = "К сожалению, в работе нашлись ошибки." \
+            if attempt['is_negative'] \
+            else "Преподавателю все понравилось!"
         message = f'У вас проверили работу "{attempt["lesson_title"]}"\n\n{status}\n\nСсылка: {attempt["lesson_url"]}'
         context.bot.send_message(chat_id=chat_id, text=message)
 
