@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
+import time
+
 import requests
 from dotenv import load_dotenv
 import logging
@@ -47,35 +49,59 @@ def main() -> None:
         level=logging.INFO
     )
 
-    try:
-        config = {
-            'DVMN_TOKEN': os.getenv('DEVMAN_TOKEN'),
-            'TELEGRAM_TOKEN': os.getenv('TELEGRAM_TOKEN'),
-            'TELEGRAM_CHAT_ID': os.getenv('TELEGRAM_CHAT_ID')
-        }
+    while True:
+        try:
+            config = {
+                'DVMN_TOKEN': os.getenv('DEVMAN_TOKEN'),
+                'TELEGRAM_TOKEN': os.getenv('TELEGRAM_TOKEN'),
+                'TELEGRAM_CHAT_ID': os.getenv('TELEGRAM_CHAT_ID')
+            }
 
-        missing = [key for key, value in config.items() if not value]
-        if missing:
-            raise ValueError(f"Отсутствуют переменные: {', '.join(missing)}\nПроверьте .env")
+            missing = [key for key, value in config.items() if not value]
+            if missing:
+                raise ValueError(f"Отсутствуют переменные: {', '.join(missing)}\nПроверьте .env")
 
-        updater = Updater(token=config['TELEGRAM_TOKEN'])
-        dispatcher = updater.dispatcher
+            updater = Updater(token=config['TELEGRAM_TOKEN'])
+            dispatcher = updater.dispatcher
 
-        dispatcher.add_handler(CommandHandler("start", start))
+            dispatcher.add_handler(CommandHandler("start", start))
 
-        updater.job_queue.run_repeating(
-            check_reviews,
-            interval=CHECK_INTERVAL_SECONDS,
-            first=1,
-            context={'chat_id': config['TELEGRAM_CHAT_ID'], 'dvmn_token': config['DVMN_TOKEN']}
-        )
+            updater.job_queue.run_repeating(
+                check_reviews,
+                interval=CHECK_INTERVAL_SECONDS,
+                first=1,
+                context={'chat_id': config['TELEGRAM_CHAT_ID'], 'dvmn_token': config['DVMN_TOKEN']}
+            )
 
-        updater.start_polling()
-        updater.idle()
+            updater.start_polling()
+            updater.idle()
 
-    except Exception as e:
-        logger.exception(f"Критическая ошибка: {e}")
-        raise
+        except requests.exceptions.ConnectionError as e:
+            logger.warning(f"Ошибка подключения: {e}. Перезапуск через 10 секунд...")
+            time.sleep(10)
+            continue
+        except requests.exceptions.Timeout as e:
+            logger.warning(f"Таймаут соединения: {e}. Перезапуск через 5 секунд...")
+            time.sleep(5)
+            continue
+        except requests.exceptions.ReadTimeout as e:
+            logger.warning(f"Таймаут чтения: {e}. Продолжаем работу...")
+            time.sleep(5)
+            continue
+        except requests.exceptions.HTTPError as e:
+            if hasattr(e, 'response') and e.response.status_code in [500, 502, 503, 504]:
+                logger.warning(
+                    f"Временная ошибка сервера ({e.response.status_code}): {e}. Перезапуск через 30 секунд...")
+                time.sleep(30)
+                continue
+            else:
+                logger.error(f"HTTP ошибка: {e}")
+                raise
+
+        except Exception as e:
+            logger.exception(f"Критическая ошибка: {e}. Перезапуск через 30 секунд...")
+            time.sleep(30)
+            continue
 
 
 if __name__ == '__main__':
