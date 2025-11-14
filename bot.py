@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""Telegram бот для уведомлений о проверке работ на Devman.org.
+
+Бот использует long-polling API Devman.org для получения уведомлений
+о проверке работ и отправляет их в указанный Telegram чат.
+"""
+
 import os
 import time
 import requests
@@ -16,6 +22,11 @@ CHECK_INTERVAL_SECONDS = 300
 
 
 def check_reviews(context: CallbackContext) -> None:
+    """Проверяет наличие новых ревью и отправляет уведомления.
+
+    Args:
+        context: Контекст CallbackContext от telegram.ext
+    """
     chat_id = context.job.context['chat_id']
     dvmn_token = context.job.context['dvmn_token']
 
@@ -41,10 +52,21 @@ def check_reviews(context: CallbackContext) -> None:
 
 
 def start(update: Update, context: CallbackContext) -> None:
+    """Обрабатывает команду /start.
+
+    Args:
+        update: Объект Update от Telegram
+        context: Контекст CallbackContext от telegram.ext
+    """
     update.message.reply_text(f'Привет, {update.effective_user.first_name}!')
 
 
 def main() -> None:
+    """Основная функция для запуска Telegram бота.
+
+    Загружает конфигурацию, настраивает обработчики команд
+    и запускает бота с планировщиком проверки ревью.
+    """
     load_dotenv()
     logging.basicConfig(
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
