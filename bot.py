@@ -118,11 +118,7 @@ def main() -> None:
             logger.warning(error_msg)
             time.sleep(5)
             continue
-        except requests.exceptions.ReadTimeout as e:
-            error_msg = f"Таймаут чтения: {e}. "
-            error_msg += "Продолжаем работу..."
-            logger.warning(error_msg)
-            time.sleep(5)
+        except requests.exceptions.ReadTimeout:
             continue
         except requests.exceptions.HTTPError as e:
             server_errors = [500, 502, 503, 504]
