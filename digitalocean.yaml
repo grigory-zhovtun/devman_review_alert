@@ -1,0 +1,18 @@
+name: devman-review-alert
+region: fra
+services:
+- name: bot
+  github:
+    branch: main
+    deploy_on_push: true
+    repo: grigory-zhovtun/devman_review_alert
+  build_command: pip install -r requirements.txt
+  run_command: python bot.py
+  source_dir: /
+  envs:
+  - key: DEVMAN_TOKEN
+    scope: RUN_AND_BUILD_TIME
+  - key: TELEGRAM_TOKEN
+    scope: RUN_AND_BUILD_TIME
+  - key: TELEGRAM_CHAT_ID
+    scope: RUN_AND_BUILD_TIME
