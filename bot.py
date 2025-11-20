@@ -21,6 +21,11 @@ logger = logging.getLogger(__name__)
 CHECK_INTERVAL_SECONDS = 300
 
 
+def log_to_telegram(bot, chat_id, message, level="ERROR"):
+    emoji = "🔴" if level == "ERROR" else "⚠️"
+    bot.send_message(chat_id=chat_id, text=f"{emoji} {message}")
+
+
 def check_reviews(context: CallbackContext) -> None:
     """Проверяет наличие новых ревью и отправляет уведомления.
 
@@ -89,6 +94,8 @@ def main() -> None:
 
             updater = Updater(token=config['TELEGRAM_TOKEN'])
             dispatcher = updater.dispatcher
+            bot = updater.bot
+            chat_id = config['TELEGRAM_CHAT_ID']
 
             dispatcher.add_handler(CommandHandler("start", start))
 
@@ -109,13 +116,13 @@ def main() -> None:
         except requests.exceptions.ConnectionError as e:
             error_msg = f"Ошибка подключения: {e}. "
             error_msg += "Перезапуск через 10 секунд..."
-            logger.warning(error_msg)
+            log_to_telegram(bot, chat_id, error_msg)
             time.sleep(10)
             continue
         except requests.exceptions.Timeout as e:
             error_msg = f"Таймаут соединения: {e}. "
             error_msg += "Перезапуск через 5 секунд..."
-            logger.warning(error_msg)
+            log_to_telegram(bot, chat_id, error_msg)
             time.sleep(5)
             continue
         except requests.exceptions.ReadTimeout:
@@ -127,18 +134,18 @@ def main() -> None:
                 status_code = e.response.status_code
                 error_msg = f"Временная ошибка сервера ({status_code}): "
                 error_msg += f"{e}. Перезапуск через 30 секунд..."
-                logger.warning(error_msg)
+                log_to_telegram(bot, chat_id, error_msg)
                 time.sleep(30)
                 continue
             else:
                 error_msg = f"HTTP ошибка: {e}"
-                logger.error(error_msg)
+                log_to_telegram(bot, chat_id, error_msg)
                 raise
 
         except Exception as e:
             error_msg = f"Критическая ошибка: {e}. "
             error_msg += "Перезапуск через 30 секунд..."
-            logger.exception(error_msg)
+            log_to_telegram(bot, chat_id, error_msg)
             time.sleep(30)
             continue
 
