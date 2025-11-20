@@ -22,6 +22,7 @@ CHECK_INTERVAL_SECONDS = 300
 
 
 def log_to_telegram(bot, chat_id, message, level="ERROR"):
+    """Отправляет лог-сообщение в Telegram."""
     emoji = "🔴" if level == "ERROR" else "⚠️"
     bot.send_message(chat_id=chat_id, text=f"{emoji} {message}")
 
